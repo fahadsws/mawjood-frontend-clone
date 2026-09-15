@@ -1,0 +1,245 @@
+'use client';
+
+import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { Bell, ChevronDown, User, Settings, LogOut, HomeIcon, Shield, Menu } from 'lucide-react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { notificationService } from '@/services/notification.service';
+import { formatDistanceToNow } from 'date-fns';
+import { useRouter } from 'next/navigation';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
+interface AdminNavbarProps {
+  onMenuClick: () => void;
+}
+
+export default function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Fetch notifications
+  const { data: notificationsData } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => notificationService.getNotifications(1, 10),
+    refetchInterval: 60000, // Refetch every 1 Minute
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    staleTime: 10000, // Consider data fresh for 10 seconds
+  });
+
+  // Fetch unread count
+  const { data: unreadCount = 0 } = useQuery({
+    queryKey: ['unread-count'],
+    queryFn: () => notificationService.getUnreadCount(),
+    refetchInterval: 60000, // Refetch every 1 Minute
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+    staleTime: 10000, // Consider data fresh for 10 seconds
+  });
+
+  // Mark as read mutation
+  const markAsReadMutation = useMutation({
+    mutationFn: (notificationId: string) => notificationService.markAsRead(notificationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-count'] });
+    },
+  });
+
+  // Mark all as read mutation
+  const markAllAsReadMutation = useMutation({
+    mutationFn: () => notificationService.markAllAsRead(),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['unread-count'] });
+    },
+  });
+
+  const handleNotificationClick = (notification: any) => {
+    if (!notification.isRead) {
+      markAsReadMutation.mutate(notification.id);
+    }
+    if (notification.link) {
+      router.push(notification.link);
+      setShowNotifications(false);
+    }
+  };
+
+  const notifications = notificationsData?.notifications || [];
+
+  return (
+    <header className="fixed top-0 right-0 left-0 lg:left-64 h-16 bg-white border-b border-gray-200 z-30 shadow-sm">
+      <div className="h-full px-4 sm:px-6 flex items-center justify-between">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1">
+          {/* Mobile Menu Button */}
+          <button
+            onClick={onMenuClick}
+            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+          >
+            <Menu className="w-6 h-6 text-gray-700" />
+          </button>
+          <div className="flex items-center gap-2 bg-red-50 border border-red-200 px-2 sm:px-3 py-1.5 rounded-lg">
+            <Shield className="w-4 h-4 text-red-600" />
+            <span className="text-xs sm:text-sm font-semibold text-red-600 hidden sm:inline">Admin Dashboard</span>
+            <span className="text-xs sm:text-sm font-semibold text-red-600 sm:hidden">Admin</span>
+          </div>
+          <h2 className="text-base sm:text-lg font-semibold text-gray-800 truncate">
+            Welcome, {user?.firstName || 'Admin'}!
+          </h2>
+        </div>
+
+        {/* Right side actions */}
+        <div className="flex items-center space-x-2 sm:space-x-4">
+          {/* Notifications */}
+          <Popover open={showNotifications} onOpenChange={setShowNotifications}>
+            <PopoverTrigger asChild>
+              <button
+                className="relative p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                onClick={() => setShowProfileMenu(false)}
+              >
+                <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1 right-1 w-4 h-4 sm:w-5 sm:h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center text-[10px] sm:text-xs">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 sm:w-80 p-0 max-h-[500px] overflow-hidden flex flex-col" align="end">
+              <div className="px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="font-semibold text-gray-900">Notifications</h3>
+                {notifications.length > 0 && (
+                  <button
+                    onClick={() => markAllAsReadMutation.mutate()}
+                    className="text-xs text-primary hover:text-primary/80 font-medium"
+                    disabled={markAllAsReadMutation.isPending}
+                  >
+                    Mark all read
+                  </button>
+                )}
+              </div>
+              <div className="overflow-y-auto flex-1">
+                {notifications.length > 0 ? (
+                  notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      onClick={() => handleNotificationClick(notification)}
+                      className={`px-4 py-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 ${
+                        !notification.isRead ? 'bg-primary/5' : ''
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">
+                            {notification.title}
+                          </p>
+                          <p className="text-sm text-gray-700 mt-1">
+                            {notification.message}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {formatDistanceToNow(new Date(notification.createdAt), {
+                              addSuffix: true,
+                            })}
+                          </p>
+                        </div>
+                        {!notification.isRead && (
+                          <div className="w-2 h-2 bg-primary rounded-full mt-1"></div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-8 text-center">
+                    <Bell className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                    <p className="text-sm text-gray-500">No notifications yet</p>
+                  </div>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          {/* User Profile */}
+          <Popover open={showProfileMenu} onOpenChange={setShowProfileMenu}>
+            <PopoverTrigger asChild>
+              <button
+                className="flex items-center space-x-3 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                onClick={() => setShowNotifications(false)}
+              >
+                <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center overflow-hidden">
+                  {user?.avatar ? (
+                    <Image
+                      src={user.avatar}
+                      alt={`${user.firstName} ${user.lastName}`}
+                      width={40}
+                      height={40}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-white font-semibold">
+                      {user?.firstName?.[0] || 'A'}
+                    </span>
+                  )}
+                </div>
+                <div className="text-left hidden lg:block">
+                  <p className="text-sm font-medium text-gray-900">
+                    {user?.firstName} {user?.lastName}
+                  </p>
+                  <p className="text-xs text-red-600 font-semibold">ADMIN</p>
+                </div>
+                <ChevronDown className="w-4 h-4 text-gray-600 hidden sm:block" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-56 p-0" align="end">
+              <div className="px-4 py-3 border-b border-gray-200">
+                <p className="text-sm font-medium text-gray-900">
+                  {user?.firstName} {user?.lastName}
+                </p>
+                <p className="text-xs text-gray-500">{user?.email}</p>
+                <span className="inline-block mt-1 px-2 py-0.5 bg-red-100 text-red-600 text-xs font-semibold rounded">
+                  ADMIN
+                </span>
+              </div>
+
+              <Link
+                href="/"
+                className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-gray-700"
+                onClick={() => setShowProfileMenu(false)}
+              >
+                <HomeIcon className="w-4 h-4" />
+                <span className="text-sm">Home</span>
+              </Link>
+
+              <Link
+                href="/admin/settings/site"
+                className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-gray-700"
+                onClick={() => setShowProfileMenu(false)}
+              >
+                <Settings className="w-4 h-4" />
+                <span className="text-sm">Settings</span>
+              </Link>
+
+              <div className="border-t border-gray-200 my-2"></div>
+
+              <button
+                onClick={() => {
+                  setShowProfileMenu(false);
+                  logout();
+                }}
+                className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-red-600 w-full"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="text-sm">Logout</span>
+              </button>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+    </header>
+  );
+}
+

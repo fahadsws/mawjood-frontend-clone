@@ -1,0 +1,277 @@
+'use client';
+
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { adminService } from '@/services/admin.service';
+import { UsersTable } from '@/components/admin/users/UsersTable';
+import { createColumns, User } from '@/components/admin/users/columns';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
+import { EditUserModal } from '@/components/admin/users/EditUserModal';
+
+export default function UsersPage() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [allUsers, setAllUsers] = useState<User[]>([]); // For stats cards - unfiltered
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
+  const [filters, setFilters] = useState({
+    role: '',
+    status: '',
+  });
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean;
+    userId: string | null;
+  }>({ open: false, userId: null });
+  const [editDialog, setEditDialog] = useState<{
+    open: boolean;
+    userId: string | null;
+  }>({ open: false, userId: null });
+
+  // Fetch all users for stats (unfiltered) - only on mount and after mutations
+  useEffect(() => {
+    const fetchAllUsers = async () => {
+      try {
+        setStatsLoading(true);
+        const response = await adminService.getAllUsers({ page: 1, limit: 1000 });
+        setAllUsers(response.data.users || []);
+      } catch (error: any) {
+        console.error('Error fetching all users:', error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchAllUsers();
+  }, []); // Only fetch on mount
+
+  // Fetch users when filters or searchInput change
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setSearchLoading(true);
+        const params: any = {
+          page: 1,
+          limit: 100,
+        };
+
+        if (searchInput) params.search = searchInput;
+        if (filters.role && filters.role !== 'all') params.role = filters.role;
+        if (filters.status && filters.status !== 'all') params.status = filters.status;
+
+        const response = await adminService.getAllUsers(params);
+        setUsers(response.data.users || []);
+      } catch (error: any) {
+        console.error('Error fetching users:', error);
+        toast.error(error.message || 'Failed to fetch users');
+      } finally {
+        setSearchLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [searchInput, filters.role, filters.status]);
+
+  const handleUpdateRole = async (userId: string, role: string) => {
+    try {
+      await adminService.updateUserRole(userId, role);
+      toast.success(`User role updated to ${role.replace('_', ' ')}`);
+      // Refetch all users for stats
+      const allUsersResponse = await adminService.getAllUsers({ page: 1, limit: 1000 });
+      setAllUsers(allUsersResponse.data.users || []);
+      // Refetch filtered users
+      const params: any = { page: 1, limit: 100 };
+      if (searchInput) params.search = searchInput;
+      if (filters.role && filters.role !== 'all') params.role = filters.role;
+      if (filters.status && filters.status !== 'all') params.status = filters.status;
+      const response = await adminService.getAllUsers(params);
+      setUsers(response.data.users || []);
+    } catch (error: any) {
+      console.error('Error updating role:', error);
+      toast.error(error.message || 'Failed to update user role');
+    }
+  };
+
+  const handleUpdateStatus = async (userId: string, status: string) => {
+    try {
+      await adminService.updateUserStatus(userId, status);
+      toast.success(`User status updated to ${status}`);
+      // Refetch all users for stats
+      const allUsersResponse = await adminService.getAllUsers({ page: 1, limit: 1000 });
+      setAllUsers(allUsersResponse.data.users || []);
+      // Refetch filtered users
+      const params: any = { page: 1, limit: 100 };
+      if (searchInput) params.search = searchInput;
+      if (filters.role && filters.role !== 'all') params.role = filters.role;
+      if (filters.status && filters.status !== 'all') params.status = filters.status;
+      const response = await adminService.getAllUsers(params);
+      setUsers(response.data.users || []);
+    } catch (error: any) {
+      console.error('Error updating status:', error);
+      toast.error(error.message || 'Failed to update user status');
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!deleteDialog.userId) return;
+
+    try {
+      await adminService.deleteUser(deleteDialog.userId);
+      toast.success('User deleted successfully');
+      setDeleteDialog({ open: false, userId: null });
+      // Refetch all users for stats
+      const allUsersResponse = await adminService.getAllUsers({ page: 1, limit: 1000 });
+      setAllUsers(allUsersResponse.data.users || []);
+      // Refetch filtered users
+      const params: any = { page: 1, limit: 100 };
+      if (searchInput) params.search = searchInput;
+      if (filters.role && filters.role !== 'all') params.role = filters.role;
+      if (filters.status && filters.status !== 'all') params.status = filters.status;
+      const response = await adminService.getAllUsers(params);
+      setUsers(response.data.users || []);
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast.error(error.message || 'Failed to delete user');
+    }
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value);
+  };
+
+  const handleRoleFilter = (value: string) => {
+    setFilters((prev) => ({ ...prev, role: value }));
+  };
+
+  const handleStatusFilter = (value: string) => {
+    setFilters((prev) => ({ ...prev, status: value }));
+  };
+
+  const handleEditUser = (userId: string) => {
+    setEditDialog({ open: true, userId });
+  };
+
+  const handleEditSuccess = () => {
+    // Refetch all users for stats
+    adminService.getAllUsers({ page: 1, limit: 1000 }).then((response) => {
+      setAllUsers(response.data.users || []);
+    }).catch((error: any) => {
+      console.error('Error fetching all users:', error);
+    });
+    // Refetch filtered users
+    const params: any = { page: 1, limit: 100 };
+    if (searchInput) params.search = searchInput;
+    if (filters.role && filters.role !== 'all') params.role = filters.role;
+    if (filters.status && filters.status !== 'all') params.status = filters.status;
+    adminService.getAllUsers(params).then((response) => {
+      setUsers(response.data.users || []);
+    }).catch((error: any) => {
+      console.error('Error fetching users:', error);
+      toast.error(error.message || 'Failed to fetch users');
+    });
+  };
+
+  const columns = createColumns(
+    handleUpdateRole,
+    handleUpdateStatus,
+    (userId) => setDeleteDialog({ open: true, userId }),
+    handleEditUser
+  );
+
+  if (statsLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-[#1c4233]" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="py-4 space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold">Users Management</h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">
+          Manage all users, their roles, and status
+        </p>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-[#1c4233] rounded-lg p-4 text-white">
+          <p className="text-sm opacity-90">Total Users</p>
+          <p className="text-3xl font-bold mt-1">{allUsers.length}</p>
+        </div>
+        <div className="bg-[#245240] rounded-lg p-4 text-white">
+          <p className="text-sm opacity-90">Active Users</p>
+          <p className="text-3xl font-bold mt-1">
+            {allUsers.filter((u) => u.status === 'ACTIVE').length}
+          </p>
+        </div>
+        <div className="bg-[#2d624d] rounded-lg p-4 text-white">
+          <p className="text-sm opacity-90">Business Owners</p>
+          <p className="text-3xl font-bold mt-1">
+            {allUsers.filter((u) => u.role === 'BUSINESS_OWNER').length}
+          </p>
+        </div>
+        <div className="bg-[#36725a] rounded-lg p-4 text-white">
+          <p className="text-sm opacity-90">Admins</p>
+          <p className="text-3xl font-bold mt-1">
+            {allUsers.filter((u) => u.role === 'ADMIN').length}
+          </p>
+        </div>
+      </div>
+
+      {/* Users Table */}
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6">
+        <UsersTable
+          columns={columns}
+          data={users}
+          onSearchChange={handleSearchChange}
+          onRoleFilter={handleRoleFilter}
+          onStatusFilter={handleStatusFilter}
+          loading={searchLoading}
+        />
+      </div>
+
+      {/* Edit User Modal */}
+      <EditUserModal
+        open={editDialog.open}
+        onOpenChange={(open) => setEditDialog({ open, userId: null })}
+        userId={editDialog.userId}
+        onSuccess={handleEditSuccess}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialog.open} onOpenChange={(open) => setDeleteDialog({ open, userId: null })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the user
+              account and remove all associated data from our servers.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteUser}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
