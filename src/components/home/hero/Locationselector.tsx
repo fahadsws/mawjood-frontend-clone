@@ -478,8 +478,8 @@ export default function LocationSelector({
       </div>
 
       {showDropdown && !loadingCities && (
-        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 max-h-80 overflow-hidden">
-          <div className="px-4 pt-4">
+        <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-gray-200 z-50 max-h-80 flex flex-col overflow-hidden">
+          <div className="px-4 pt-4 shrink-0">
             <div className="flex items-center gap-2 text-sm font-medium">
               {(['city', 'region', 'country'] as const).map((tab) => (
                 <button
@@ -501,7 +501,7 @@ export default function LocationSelector({
             </div>
           </div>
 
-          <div className="p-4 border-b border-gray-200 space-y-3">
+          <div className="p-4 border-b border-gray-200 space-y-3 shrink-0">
             <input
               type="text"
               value={searchQuery}
@@ -539,7 +539,7 @@ export default function LocationSelector({
             )}
           </div>
 
-          <div className="max-h-60 overflow-y-auto pb-10">
+          <div className="flex-1 min-h-0 overflow-y-auto pb-2">
             {locationTab === 'city' ? (
               searchLoading ? (
                 <div className="px-6 py-6 text-center text-gray-500">

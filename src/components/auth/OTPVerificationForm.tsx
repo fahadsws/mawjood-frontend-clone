@@ -36,7 +36,7 @@ export default function OTPVerificationForm({
     <div className="space-y-4">
       <div>
         <label className="block text-sm font-medium mb-2">
-          Enter OTP {authMethod === 'phone' && '(Static: 12345)'}
+          Enter OTP
         </label>
         <Input
           type="text"
