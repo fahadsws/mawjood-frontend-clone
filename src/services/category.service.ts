@@ -52,6 +52,9 @@ const handleError = (error: unknown): never => {
 
 // Category Service
 export const categoryService = {
+  async fetchPopularCategories(): Promise<Category[]> {
+    try { const response = await axiosInstance.get<CategoryResponse | { data: Category[] }>(API_ENDPOINTS.CATEGORIES.GET_POPULAR); const data = response.data as any; return data.data?.categories ?? data.data ?? data.categories ?? []; } catch (error) { return handleError(error); }
+  },
   /**
    * Fetch all categories
    */

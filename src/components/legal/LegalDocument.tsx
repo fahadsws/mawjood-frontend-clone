@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { LegalContentSettings } from '@/services/settings.service';
 
-type LegalDocumentKey = 'terms' | 'privacy';
+type LegalDocumentKey = 'terms' | 'privacy' | 'addBusiness' | 'brands';
 
 interface LegalDocumentProps {
   settingKey: LegalDocumentKey;

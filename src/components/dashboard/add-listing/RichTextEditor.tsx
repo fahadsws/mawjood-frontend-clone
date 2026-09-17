@@ -5,8 +5,22 @@ import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import ImageExtension from '@tiptap/extension-image';
 import Link from '@tiptap/extension-link';
+import {Table} from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableHeader from '@tiptap/extension-table-header';
+import TableCell from '@tiptap/extension-table-cell';
 import { useEffect, useRef, useState } from 'react';
-import { ImagePlus, Loader2, Link as LinkIcon } from 'lucide-react';
+import {
+  ImagePlus,
+  Loader2,
+  Link as LinkIcon,
+  Table as TableIcon,
+  Columns,
+  Rows,
+  Trash2,
+  Combine,
+  SplitSquareHorizontal,
+} from 'lucide-react';
 import axiosInstance from '@/lib/axios';
 import { API_ENDPOINTS } from '@/config/api.config';
 
@@ -33,6 +47,8 @@ const InsertParagraphAfterHeading = Extension.create({
   },
 });
 
+const HEADING_LEVELS = [1, 2, 3, 4, 5, 6] as const;
+
 export default function RichTextEditor({
   content,
   onChange,
@@ -52,7 +68,7 @@ export default function RichTextEditor({
         code: false,
         codeBlock: false,
         heading: {
-          levels: [1, 2, 3],
+          levels: [1, 2, 3, 4, 5, 6],
         },
       }),
       Placeholder.configure({
@@ -69,6 +85,15 @@ export default function RichTextEditor({
           class: 'text-blue-600 underline cursor-pointer',
         },
       }),
+      Table.configure({
+        resizable: true,
+        HTMLAttributes: {
+          class: 'tiptap-table',
+        },
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
       InsertParagraphAfterHeading,
     ],
     content,
@@ -136,7 +161,7 @@ export default function RichTextEditor({
 
     const { from, to } = editor.state.selection;
     const selectedText = editor.state.doc.textBetween(from, to);
-    
+
     // Check if link is already active
     if (editor.isActive('link')) {
       const attrs = editor.getAttributes('link');
@@ -144,7 +169,7 @@ export default function RichTextEditor({
     } else {
       setLinkUrl(selectedText || '');
     }
-    
+
     setShowLinkInput(true);
   };
 
@@ -177,6 +202,36 @@ export default function RichTextEditor({
     setLinkUrl('');
   };
 
+  // Current block type shown in the paragraph/heading dropdown
+  const getCurrentBlockType = () => {
+    if (!editor) return 'paragraph';
+    for (const level of HEADING_LEVELS) {
+      if (editor.isActive('heading', { level })) return `h${level}`;
+    }
+    return 'paragraph';
+  };
+
+  const handleBlockTypeChange = (value: string) => {
+    if (!editor) return;
+    if (value === 'paragraph') {
+      editor.chain().focus().setParagraph().run();
+    } else {
+      const level = Number(value.replace('h', '')) as (typeof HEADING_LEVELS)[number];
+      editor.chain().focus().toggleHeading({ level }).run();
+    }
+  };
+
+  const insertTable = () => {
+    if (!editor) return;
+    editor
+      .chain()
+      .focus()
+      .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+      .run();
+  };
+
+  const isInTable = editor?.isActive('table');
+
   return (
     <div>
       <div className={`border rounded-lg ${
@@ -184,30 +239,22 @@ export default function RichTextEditor({
       }`}>
         {/* Toolbar */}
         <div className="flex items-center gap-1 p-2 border-b border-gray-200 bg-gray-50 rounded-t-lg flex-wrap">
-          <button
-            type="button"
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
-            className={`p-2 rounded hover:bg-gray-200 ${editor?.isActive('heading', { level: 1 }) ? 'bg-gray-200' : ''}`}
-            title="Heading 1"
+          {/* Paragraph / Heading dropdown (covers paragraph + H1-H6) */}
+          <select
+            value={getCurrentBlockType()}
+            onChange={(e) => handleBlockTypeChange(e.target.value)}
+            className="p-2 rounded border border-transparent hover:bg-gray-200 text-sm bg-transparent focus:outline-none focus:ring-1 focus:ring-[#1c4233]"
+            title="Text style"
           >
-            H1
-          </button>
-          <button
-            type="button"
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-            className={`p-2 rounded hover:bg-gray-200 ${editor?.isActive('heading', { level: 2 }) ? 'bg-gray-200' : ''}`}
-            title="Heading 2"
-          >
-            H2
-          </button>
-          <button
-            type="button"
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
-            className={`p-2 rounded hover:bg-gray-200 ${editor?.isActive('heading', { level: 3 }) ? 'bg-gray-200' : ''}`}
-            title="Heading 3"
-          >
-            H3
-          </button>
+            <option value="paragraph">Paragraph</option>
+            <option value="h1">Heading 1</option>
+            <option value="h2">Heading 2</option>
+            <option value="h3">Heading 3</option>
+            <option value="h4">Heading 4</option>
+            <option value="h5">Heading 5</option>
+            <option value="h6">Heading 6</option>
+          </select>
+
           <div className="w-px h-6 bg-gray-300 mx-1"></div>
 
           <button
@@ -266,15 +313,6 @@ export default function RichTextEditor({
 
           <button
             type="button"
-            onClick={() => editor?.chain().focus().setParagraph().run()}
-            className={`p-2 rounded hover:bg-gray-200 ${editor?.isActive('paragraph') ? 'bg-gray-200' : ''}`}
-            title="Paragraph"
-          >
-            P
-          </button>
-
-          <button
-            type="button"
             onClick={triggerImagePicker}
             className="p-2 rounded hover:bg-gray-200"
             title="Insert Image"
@@ -305,7 +343,7 @@ export default function RichTextEditor({
           >
             <LinkIcon className="h-4 w-4 text-gray-600" />
           </button>
-          
+
           {editor?.isActive('link') && (
             <button
               type="button"
@@ -316,6 +354,107 @@ export default function RichTextEditor({
               <span className="text-xs text-gray-600">Unlink</span>
             </button>
           )}
+
+          <div className="w-px h-6 bg-gray-300 mx-1"></div>
+
+          {/* Table controls */}
+          <button
+            type="button"
+            onClick={insertTable}
+            className={`p-2 rounded hover:bg-gray-200 ${isInTable ? 'bg-gray-200' : ''}`}
+            title="Insert Table"
+          >
+            <TableIcon className="h-4 w-4 text-gray-600" />
+          </button>
+
+          {isInTable && (
+            <>
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().addColumnBefore().run()}
+                className="p-2 rounded hover:bg-gray-200"
+                title="Add Column Before"
+              >
+                <Columns className="h-4 w-4 text-gray-600" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().addColumnAfter().run()}
+                className="p-2 rounded hover:bg-gray-200"
+                title="Add Column After"
+              >
+                <Columns className="h-4 w-4 text-gray-600 scale-x-[-1]" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().deleteColumn().run()}
+                className="p-2 rounded hover:bg-gray-200"
+                title="Delete Column"
+              >
+                <Columns className="h-4 w-4 text-red-500" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().addRowBefore().run()}
+                className="p-2 rounded hover:bg-gray-200"
+                title="Add Row Before"
+              >
+                <Rows className="h-4 w-4 text-gray-600" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().addRowAfter().run()}
+                className="p-2 rounded hover:bg-gray-200"
+                title="Add Row After"
+              >
+                <Rows className="h-4 w-4 text-gray-600 scale-y-[-1]" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().deleteRow().run()}
+                className="p-2 rounded hover:bg-gray-200"
+                title="Delete Row"
+              >
+                <Rows className="h-4 w-4 text-red-500" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().mergeCells().run()}
+                className="p-2 rounded hover:bg-gray-200"
+                title="Merge Cells"
+              >
+                <Combine className="h-4 w-4 text-gray-600" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().splitCell().run()}
+                className="p-2 rounded hover:bg-gray-200"
+                title="Split Cell"
+              >
+                <SplitSquareHorizontal className="h-4 w-4 text-gray-600" />
+              </button>
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().toggleHeaderRow().run()}
+                className="p-2 rounded hover:bg-gray-200 text-xs font-medium text-gray-600"
+                title="Toggle Header Row"
+              >
+                Hdr
+              </button>
+              <button
+                type="button"
+                onClick={() => editor?.chain().focus().deleteTable().run()}
+                className="p-2 rounded hover:bg-gray-200"
+                title="Delete Table"
+              >
+                <Trash2 className="h-4 w-4 text-red-500" />
+              </button>
+            </>
+          )}
+
+          <div className="w-px h-6 bg-gray-300 mx-1"></div>
 
           <button
             type="button"

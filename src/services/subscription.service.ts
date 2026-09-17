@@ -27,6 +27,7 @@ export interface SubscriptionPlan {
   couponEndsAt?: string;
   couponUsageLimit?: number;
   notes?: string;
+  features?: Record<string, boolean>;
   metadata?: any;
   createdAt: string;
   updatedAt: string;

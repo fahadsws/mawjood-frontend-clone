@@ -9,7 +9,8 @@ import UnifiedAuthModal from '@/components/auth/UnifiedAuthModal';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 import GTranslate from '@/components/GTranslate';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Bell, Briefcase, Globe, Megaphone, Phone, User, Menu, LogIn, X } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Bell, Briefcase, Globe, Megaphone, Phone, User, Menu, LogIn, X,ChevronDown } from 'lucide-react';
 
 const NAV_LINKS = [
   { href: '/contact', key: 'contact' },
@@ -80,6 +81,10 @@ export default function Navbar() {
 
             {/* Right: Desktop Actions */}
             <div className="hidden lg:flex items-center gap-6">
+              <Link href="/" className="text-gray-600 hover:text-primary text-sm font-medium">Home</Link>
+              <Link href="/about" className="text-gray-600 hover:text-primary text-sm font-medium">About</Link>
+              <DropdownMenu><DropdownMenuTrigger className="flex items-center gap-1 text-gray-600 hover:text-primary text-sm font-medium">Categories <ChevronDown className="h-3 w-3" /></DropdownMenuTrigger><DropdownMenuContent><DropdownMenuItem asChild><Link href="/categories">All Categories</Link></DropdownMenuItem><DropdownMenuItem asChild><Link href="/businesses">Businesses</Link></DropdownMenuItem><DropdownMenuItem asChild><Link href="#tourist-places">Tourist Places</Link></DropdownMenuItem></DropdownMenuContent></DropdownMenu>
+              <Link href="/blog" className="text-gray-600 hover:text-primary text-sm font-medium">Blog</Link>
               {/* Language */}
               <div className="flex items-center gap-1 text-gray-600 hover:text-primary text-sm font-medium cursor-pointer relative z-10">
                 <div className="min-w-[80px]">
@@ -223,6 +228,10 @@ export default function Navbar() {
                     {t(`nav.${link.key}`)}
                   </Link>
                 ))}
+                <Link href="/" className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-md" onClick={closeMobileMenu}>Home</Link>
+                <Link href="/about" className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-md" onClick={closeMobileMenu}>About</Link>
+                <Link href="/categories" className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-md" onClick={closeMobileMenu}>Categories</Link>
+                <Link href="/blog" className="block px-3 py-3 text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50 rounded-md" onClick={closeMobileMenu}>Blog</Link>
                 
                 <Link
                     href="/advertise"

@@ -124,6 +124,9 @@ export default function PricingPlansSection() {
               const discount = plan.discount || Math.round(((originalPrice - dailyPrice) / originalPrice) * 100);
               const planName = plan.name || 'Standard Plan';
               const currency = plan.currency || 'SAR';
+              const featureEntries: [string, boolean][] = Array.isArray(plan.features)
+                ? plan.features.map((feature: PlanFeature) => [feature.name, feature.included])
+                : Object.entries(plan.features || {});
 
               return (
                 <div
@@ -176,34 +179,14 @@ export default function PricingPlansSection() {
                   </button>
 
                   <div className="space-y-3">
-                    {planFeatures.slice(0, 7).map((feature, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                        <span className="text-sm text-gray-700">{feature.name}</span>
-                      </div>
-                    ))}
-                    {planFeatures.slice(7).map((feature, idx) => {
-                      const included = planName.includes('3 Year') && feature.name === 'Trust Stamp'
-                        ? true
-                        : isRecommended && feature.name === 'Top 5 Visibility'
-                        ? true
-                        : isRecommended && feature.name === 'Verified Seal'
-                        ? true
-                        : false;
-                      
-                      return (
-                        <div key={idx + 7} className="flex items-center gap-2">
-                          {included ? (
-                            <Check className="w-5 h-5 text-green-500 flex-shrink-0" />
-                          ) : (
-                            <X className="w-5 h-5 text-gray-300 flex-shrink-0" />
-                          )}
-                          <span className={`text-sm ${included ? 'text-gray-700' : 'text-gray-400'}`}>
-                            {feature.name}
-                          </span>
-                        </div>
-                      );
+                    {featureEntries.map(([key, included]) => {
+                      const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, (value) => value.toUpperCase());
+                      return <div key={key} className="flex items-center gap-2">
+                        {included ? <Check className="w-5 h-5 text-green-500 flex-shrink-0" /> : <X className="w-5 h-5 text-gray-300 flex-shrink-0" />}
+                        <span className={`text-sm ${included ? 'text-gray-700' : 'text-gray-400'}`}>{label}</span>
+                      </div>;
                     })}
+                    {!featureEntries.length && <p className="text-sm text-gray-500">No features included.</p>}
                   </div>
                 </div>
               );

@@ -104,6 +104,16 @@
       "electricians": "Electricians"
     }
   },
+  "careers": {
+    "heroTitle": "Build what's next with Mawjood",
+    "heroDescription": "Help us make it easier for people to discover places, businesses, and opportunities across Saudi Arabia.",
+    "openPositions": "Open positions",
+    "subtitle": "Find your next opportunity at Mawjood.",
+    "loading": "Loading open positions...",
+    "emptyTitle": "No open positions at the moment",
+    "emptyDescription": "Check back soon for new opportunities.",
+    "error": "We couldn't load openings right now. Please try again later."
+  },
   "auth": {
     "login": "Login",
     "register": "Register",

@@ -25,6 +25,7 @@ export const API_ENDPOINTS = {
   // Category endpoints
   CATEGORIES: {
     GET_ALL: '/api/categories',
+    GET_POPULAR: '/api/categories/popular',
     GET_BY_ID: (id: string) => `/api/categories/${id}`,
     GET_BY_SLUG: (slug: string) => `/api/categories/slug/${slug}`,
     CREATE: '/api/categories',
@@ -175,6 +176,16 @@ export const API_ENDPOINTS = {
     CREATE: '/api/tourist-places',
     UPDATE: (id: string) => `/api/tourist-places/${id}`,
     DELETE: (id: string) => `/api/tourist-places/${id}`,
+  },
+
+  CAREERS: {
+    GET_ALL: '/api/careers',
+    SUBMIT_APPLICATION: '/api/careers/applications',
+    GET_ALL_ADMIN: '/api/careers/admin/all',
+    GET_APPLICATIONS_ADMIN: '/api/careers/admin/applications',
+    CREATE: '/api/careers',
+    UPDATE: (id: string) => `/api/careers/${id}`,
+    DELETE: (id: string) => `/api/careers/${id}`,
   },
 } as const;
 
