@@ -69,17 +69,13 @@ export default function FeaturedListings() {
     // Get the businesses to display for the current slide
     const getVisibleBusinesses = () => {
         if (!businesses.length) return [];
-        
-        const visibleBusinesses = [];
-        // The starting index for the current page
+
         const startIndex = currentSlide * businessesPerPage;
 
-        for (let i = 0; i < businessesPerPage; i++) {
-            // Use modulo to wrap around to the beginning if we run out of items
-            const index = (startIndex + i) % businesses.length;
-            visibleBusinesses.push(businesses[index]);
-        }
-        return visibleBusinesses;
+        return businesses.slice(
+            startIndex,
+            startIndex + businessesPerPage
+        );
     };
 
     const getPriceLevel = (rating: number) => {

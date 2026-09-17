@@ -1,7 +1,7 @@
 'use client';
 
-import { Dispatch, FormEvent, SetStateAction } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Dispatch, FormEvent, SetStateAction, useState } from 'react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { SubscriptionPlan } from '@/services/subscription.service';
 import {
     Dialog,
@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/select';
 
 export interface PlanFormValues {
+  features: Record<string, boolean>;
   name: string;
   slug: string;
   description: string;
@@ -65,6 +66,15 @@ const PlanFormDialog = ({
   onCancel,
   isSubmitting,
 }: PlanFormDialogProps) => {
+  const [newFeature, setNewFeature] = useState('');
+  const [addingFeature, setAddingFeature] = useState(false);
+  const addFeature = () => {
+    const key = newFeature.trim();
+    if (!key) return;
+    setFormData((prev) => ({ ...prev, features: { ...prev.features, [key]: false } }));
+    setNewFeature('');
+    setAddingFeature(false);
+  };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl w-[95vw] max-h-[90vh] overflow-y-auto p-0">
@@ -274,6 +284,11 @@ const PlanFormDialog = ({
                 </div>
               )}
 
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-medium text-slate-900 dark:text-slate-200 mb-4">Features</h3>
+                <div className="space-y-2">{Object.entries(formData.features).map(([key, enabled]) => <div key={key} className="flex items-center justify-between rounded-md border p-3 text-sm"><label className="flex items-center gap-2"><input type="checkbox" checked={enabled} onChange={(e) => setFormData((prev) => ({ ...prev, features: { ...prev.features, [key]: e.target.checked } }))}/>{key.replace(/([A-Z])/g, ' $1').replace(/^./, (x) => x.toUpperCase())}</label><button type="button" onClick={() => setFormData((prev) => { const features = { ...prev.features }; delete features[key]; return { ...prev, features }; })} className="text-red-600 hover:text-red-700" aria-label={`Delete ${key}`}><Trash2 className="h-4 w-4" /></button></div>)}</div>
+                {!addingFeature ? <button type="button" className="mt-3 text-sm text-[#1c4233]" onClick={() => setAddingFeature(true)}>+ Add more</button> : <div className="mt-3 flex items-center gap-2"><Input autoFocus value={newFeature} onChange={(e) => setNewFeature(e.target.value)} placeholder="Feature name" className="flex-1"/><Button type="button" size="sm" onClick={addFeature} className="bg-[#1c4233]">Save</Button><Button type="button" size="sm" variant="outline" onClick={() => { setAddingFeature(false); setNewFeature(''); }}>Cancel</Button></div>}
+              </div>
               <div className="border-t pt-6">
                 <h3 className="text-lg font-medium text-slate-900 dark:text-slate-200 mb-4">
                   Plan Type

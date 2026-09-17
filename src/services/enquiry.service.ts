@@ -53,6 +53,7 @@ export interface UpdateEnquiryStatusData {
   status: EnquiryStatus;
   response?: string;
 }
+export interface BulkEnquiryStatusData { enquiryIds: string[]; status: EnquiryStatus; response?: string; }
 
 export interface EnquiryFilters {
   page?: number;
@@ -194,6 +195,18 @@ class EnquiryService {
     } catch (error) {
       const axiosError = error as AxiosError<{ message: string }>;
       throw new Error(axiosError.response?.data?.message || 'Failed to update enquiry');
+    }
+  }
+
+  async bulkUpdateStatus(data: BulkEnquiryStatusData): Promise<{ updatedCount: number }> {
+    try {
+      const response = await axiosInstance.patch<{ updatedCount: number; data?: { updatedCount: number } }>(
+        '/api/enquiries/admin/bulk-status', data
+      );
+      return response.data.data ?? response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      throw new Error(axiosError.response?.data?.message || 'Failed to update enquiry statuses');
     }
   }
 }

@@ -20,6 +20,7 @@ import {
   X,
   Map,
   MessageSquare,
+  Briefcase as BriefcaseIcon,
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -88,6 +89,11 @@ const sidebarItems = [
     name: 'Enquiries',
     href: '/admin/enquiries',
     icon: MessageSquare,
+  },
+  {
+    name: 'Careers',
+    href: '/admin/careers',
+    icon: BriefcaseIcon,
   },
 ];
 

@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { subscriptionService, SubscriptionPlan, parseDecimal } from '@/services/subscription.service';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Plus, Edit, Archive, Loader2, UserPlus } from 'lucide-react';
+import { Plus, Edit, Archive, Loader2, UserPlus,Copy } from 'lucide-react';
 import { useCurrency } from '@/hooks/useCurrency';
 import PlanFormDialog, { PlanFormValues } from '@/components/admin/subscription-plans/PlanFormDialog';
 import {
@@ -27,6 +27,7 @@ export default function SubscriptionPlansPage() {
   const [planToArchive, setPlanToArchive] = useState<SubscriptionPlan | null>(null);
   const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
   const [formData, setFormData] = useState<PlanFormValues>({
+    features: {},
     name: '',
     slug: '',
     description: '',
@@ -126,6 +127,7 @@ export default function SubscriptionPlansPage() {
 
   const resetForm = () => {
     setFormData({
+      features: {},
       name: '',
       slug: '',
       description: '',
@@ -186,7 +188,15 @@ export default function SubscriptionPlansPage() {
       couponEndsAt: plan.couponEndsAt || '',
       couponUsageLimit: plan.couponUsageLimit?.toString() || '',
       notes: plan.notes || '',
+      features: plan.features || {},
     });
+    setIsDialogOpen(true);
+  };
+
+  const handleClone = (plan: SubscriptionPlan) => {
+    handleEdit(plan);
+    setEditingPlan(null);
+    setFormData((previous) => ({ ...previous, name: `${plan.name} Copy`, slug: `${plan.slug}-copy` }));
     setIsDialogOpen(true);
   };
 
@@ -217,6 +227,7 @@ export default function SubscriptionPlansPage() {
       couponEndsAt: formData.couponEndsAt || undefined,
       couponUsageLimit: formData.couponUsageLimit ? parseInt(formData.couponUsageLimit) : undefined,
       notes: formData.notes || undefined,
+      features: formData.features,
     };
 
     if (editingPlan) {
@@ -276,7 +287,7 @@ export default function SubscriptionPlansPage() {
             <div className="flex items-start justify-between mb-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 text-wrap w-50">
                     {plan.name}
                   </h3>
                   {plan.isSponsorPlan && (
@@ -296,6 +307,9 @@ export default function SubscriptionPlansPage() {
                   onClick={() => handleEdit(plan)}
                 >
                   <Edit className="w-4 h-4" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleClone(plan)}>
+                  <Copy className="w-4 h-4" />
                 </Button>
                 <Button
                   variant="outline"

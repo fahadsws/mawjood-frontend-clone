@@ -81,7 +81,7 @@ export default function BusinessByCategoryChart({ data }: BusinessByCategoryChar
             />
             <Legend
               verticalAlign="bottom"
-              height={36}
+              // height={36}
               formatter={(value: string) => (
                 <span style={{ fontSize: '12px', color: '#374151' }}>
                   {value.length > 15 ? value.substring(0, 15) + '...' : value}

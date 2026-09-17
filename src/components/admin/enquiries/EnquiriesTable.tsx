@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, X } from 'lucide-react';
 import { Category } from '@/services/category.service';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface EnquiriesTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -38,6 +39,7 @@ interface EnquiriesTableProps<TData, TValue> {
   categories?: Category[];
   onStatusFilterChange?: (value: string) => void;
   onCategoryFilterChange?: (value: string) => void;
+  onSelectionChange?: (ids: string[]) => void;
 }
 
 export function EnquiriesTable<TData, TValue>({
@@ -51,12 +53,14 @@ export function EnquiriesTable<TData, TValue>({
   categories = [],
   onStatusFilterChange,
   onCategoryFilterChange,
+  onSelectionChange,
 }: EnquiriesTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
   const [searchValue, setSearchValue] = useState(externalSearchValue);
   const [categorySearch, setCategorySearch] = useState('');
+  const [rowSelection, setRowSelection] = useState({});
   const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   // Filter categories based on search
@@ -92,6 +96,8 @@ export function EnquiriesTable<TData, TValue>({
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
+    enableRowSelection: Boolean(onSelectionChange),
+    onRowSelectionChange: setRowSelection,
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -100,6 +106,7 @@ export function EnquiriesTable<TData, TValue>({
       sorting,
       columnFilters,
       columnVisibility,
+      rowSelection,
     },
     initialState: {
       pagination: {
@@ -107,6 +114,7 @@ export function EnquiriesTable<TData, TValue>({
       },
     },
   });
+  useEffect(() => { onSelectionChange?.(table.getSelectedRowModel().rows.map((row) => (row.original as TData & { id: string }).id)); }, [rowSelection, data, onSelectionChange, table]);
 
   return (
     <div className="space-y-4">
@@ -217,7 +225,7 @@ export function EnquiriesTable<TData, TValue>({
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id} className="border-b">
-                {headerGroup.headers.map((header) => {
+                {onSelectionChange && <TableHead className="w-10"><Checkbox checked={table.getIsAllPageRowsSelected()} onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)} aria-label="Select all" /></TableHead>}{headerGroup.headers.map((header) => {
                   return (
                     <TableHead key={header.id} className="font-semibold text-gray-700 dark:text-gray-300">
                       {header.isPlaceholder
@@ -251,7 +259,7 @@ export function EnquiriesTable<TData, TValue>({
                   data-state={row.getIsSelected() && 'selected'}
                   className="border-b hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
-                  {row.getVisibleCells().map((cell) => (
+                  {onSelectionChange && <TableCell><Checkbox checked={row.getIsSelected()} onCheckedChange={(value) => row.toggleSelected(!!value)} aria-label="Select enquiry" /></TableCell>}{row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="py-4">
                       {flexRender(
                         cell.column.columnDef.cell,

@@ -6,7 +6,10 @@ import { categoryService, Category } from '@/services/category.service';
 import { EnquiriesTable } from '@/components/admin/enquiries/EnquiriesTable';
 import { createColumns } from '@/components/admin/enquiries/columns';
 import { toast } from 'sonner';
-import { Loader2, MessageSquare } from 'lucide-react';
+import { Loader2, MessageSquare, CheckCircle2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -16,7 +19,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { AlertCircle, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { AlertCircle, Clock, XCircle } from 'lucide-react';
 
 const statusColors: Record<EnquiryStatus, string> = {
   OPEN: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
@@ -43,6 +46,10 @@ export default function EnquiriesPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedEnquiry, setSelectedEnquiry] = useState<Enquiry | null>(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkStatus, setBulkStatus] = useState<EnquiryStatus>(EnquiryStatus.CLOSED);
+  const [bulkResponse, setBulkResponse] = useState('');
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   // Fetch categories
   useEffect(() => {
@@ -122,6 +129,7 @@ export default function EnquiriesPage() {
   };
 
   const columns = createColumns(handleView);
+  const handleBulkStatus = async () => { if (!selectedIds.length) return; try { setBulkLoading(true); await enquiryService.bulkUpdateStatus({ enquiryIds: selectedIds, status: bulkStatus, response: bulkResponse || undefined }); toast.success(`${selectedIds.length} enquiries updated`); setSelectedIds([]); setBulkResponse(''); await fetchAllEnquiries(); } catch (error: any) { toast.error(error.message); } finally { setBulkLoading(false); } };
 
   // Calculate stats from ALL enquiries (not filtered)
   const stats = {
@@ -171,6 +179,24 @@ export default function EnquiriesPage() {
 
       {/* Enquiries Table */}
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow p-6">
+        
+        {selectedIds.length > 0 && 
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-primary/20 bg-primary/5 p-3">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{selectedIds.length} selected</span>
+          
+          <Select value={bulkStatus} onValueChange={(v) => setBulkStatus(v as EnquiryStatus)}>
+            <SelectTrigger className="w-40"><SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.values(EnquiryStatus).map((status) => 
+              <SelectItem key={status} value={status}>{status.replace('_',' ')}</SelectItem>)}
+              </SelectContent>
+              </Select>
+              <Input value={bulkResponse} onChange={(e) => setBulkResponse(e.target.value)} placeholder="Optional response" className="max-w-sm"/>
+              <Button disabled={bulkLoading} onClick={handleBulkStatus}>
+                <CheckCircle2 className="mr-2 h-4 w-4"/>Update status
+              </Button>
+        </div>}
         <EnquiriesTable
           columns={columns}
           data={enquiries}
@@ -182,6 +208,7 @@ export default function EnquiriesPage() {
           categories={categories}
           onStatusFilterChange={setStatusFilter}
           onCategoryFilterChange={setCategoryFilter}
+          onSelectionChange={setSelectedIds}
         />
       </div>
 
