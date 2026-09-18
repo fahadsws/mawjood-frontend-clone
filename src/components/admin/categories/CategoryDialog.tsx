@@ -186,6 +186,10 @@ export default function CategoryDialog({
     if (formData.parentId) formDataToSend.append('parentId', formData.parentId);
     if (iconFile) formDataToSend.append('icon', iconFile);
     if (imageFile) formDataToSend.append('image', imageFile);
+    if (isEditMode) {
+      if (!iconFile && !iconPreview) formDataToSend.append('icon', '');
+      if (!imageFile && !imagePreview) formDataToSend.append('image', '');
+    }
 
     if (isEditMode && category) {
       updateMutation.mutate({ id: category.id, formDataToSend });

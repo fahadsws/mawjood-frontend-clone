@@ -54,6 +54,7 @@ export function CategoriesTable<TData, TValue>({
   const table = useReactTable({
     data,
     columns,
+    autoResetPageIndex: false,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { touristPlaceService, TouristPlace } from '@/services/touristPlace.service';
 import { TouristPlaceForm } from '@/components/admin/tourist-places/TouristPlaceForm';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ export default function EditTouristPlacePage() {
   const params = useParams();
   const id = params.id as string;
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: touristPlace, isLoading, error } = useQuery({
     queryKey: ['tourist-place-admin', id],
@@ -32,8 +33,11 @@ export default function EditTouristPlacePage() {
     try {
       setIsSubmitting(true);
       await touristPlaceService.update(id, formData);
+      await queryClient.invalidateQueries({ queryKey: ['tourist-places'] });
+      await queryClient.invalidateQueries({ queryKey: ['tourist-place-admin', id] });
       toast.success('Tourist place updated successfully!');
       router.push('/admin/tourist-places');
+      router.refresh();
     } catch (error: any) {
       console.error('Error updating tourist place:', error);
       toast.error(error.message || 'Failed to update tourist place');
