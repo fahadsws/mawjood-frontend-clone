@@ -473,7 +473,13 @@ export const businessService = {
             else if (image?.url) formData.append('images', image.url);
           });
         } else if (key === 'galleryImages' && Array.isArray(value)) {
-          const imageAlts = value.map((img) => (typeof img === 'object' && img !== null ? img.alt || '' : ''));
+          const imageAlts = value.map((img) => (
+            img instanceof File
+              ? ''
+              : typeof img === 'object' && img !== null && 'alt' in img
+                ? img.alt || ''
+                : ''
+          ));
           if (imageAlts.length > 0) formData.append('imageAlts', JSON.stringify(imageAlts));
         } else if (value instanceof File) {
           formData.append(key, value);
