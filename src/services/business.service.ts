@@ -462,7 +462,7 @@ export const businessService = {
   async updateBusiness(id: string, data: Partial<CreateBusinessData>): Promise<Business> {
     try {
       const formData = new FormData();
-      
+      console.log('Updating business with data:', data);
       Object.entries(data).forEach(([key, value]) => {
         if (value === undefined || value === null) return;
         
@@ -474,14 +474,15 @@ export const businessService = {
               formData.append('images', image);
             }
           });
+        } else if (key === 'existingImages' && Array.isArray(value)) {
+          formData.append('existingImages', JSON.stringify(value)); // send kept-existing list as JSON
         } else if (key === 'galleryImages' && Array.isArray(value)) {
-          // Extract alt tags from gallery images
-          const imageAlts = value.map((img: any) => img?.alt || '');
-          if (imageAlts.length > 0) {
-            formData.append('imageAlts', JSON.stringify(imageAlts));
-          }
+          const imageAlts = value.map((img) => img?.alt || '');
+          if (imageAlts.length > 0) formData.append('imageAlts', JSON.stringify(imageAlts));
         } else if (value instanceof File) {
           formData.append(key, value);
+        } else if (Array.isArray(value)) {
+          formData.append(key, JSON.stringify(value)); // catch-all: never .toString() an array again
         } else {
           formData.append(key, value.toString());
         }

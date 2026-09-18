@@ -208,9 +208,7 @@ export function TouristPlaceForm({ touristPlace, onSubmit, isSubmitting }: Touri
     if (metaDescription) formData.append('metaDescription', metaDescription);
     formData.append('isActive', isActive.toString());
     
-    if (existingImageUrls.length > 0) {
-      formData.append('galleryImages', JSON.stringify(existingImageUrls));
-    }
+    formData.append('galleryImages', JSON.stringify(existingImageUrls));
     
     newImageFiles.forEach((file) => {
       formData.append('galleryImages', file);

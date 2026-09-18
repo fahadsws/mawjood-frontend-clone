@@ -73,6 +73,9 @@ export default function SubscriptionsPage() {
     return true;
   });
   const subscriptions = subscriptionsData?.data?.subscriptions || [];
+  const hasActiveSubscription = subscriptions.some(
+    (subscription) => subscription.status === 'ACTIVE' && new Date(subscription.endsAt) > new Date()
+  );
 
   const createSubscriptionMutation = useMutation({
     mutationFn: (data: { businessId: string; planId: string }) =>
@@ -260,14 +263,20 @@ export default function SubscriptionsPage() {
               )}
             </div>
 
-            <Button
-              onClick={() => handleSubscribe(plan)}
-              className="w-full bg-[#1c4233] hover:bg-[#245240] mt-auto"
-              disabled={!businesses || businesses.length === 0}
-            >
-              <CreditCard className="w-4 h-4 mr-2" />
-              Subscribe Now
-            </Button>
+            {!hasActiveSubscription ? (
+              <Button
+                onClick={() => handleSubscribe(plan)}
+                className="w-full bg-[#1c4233] hover:bg-[#245240] mt-auto"
+                disabled={!businesses || businesses.length === 0}
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                Subscribe Now
+              </Button>
+            ) : (
+              <p className="mt-auto rounded-lg bg-green-50 px-3 py-2 text-center text-sm font-medium text-green-700">
+                You already have an active subscription
+              </p>
+            )}
           </div>
         ))}
       </div>
