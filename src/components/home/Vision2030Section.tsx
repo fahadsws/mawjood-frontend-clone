@@ -1,0 +1,6 @@
+const VISION_URL = 'https://www.vision2030.gov.sa/ar/';
+const VISION_LOGO = 'https://tweeq.edu.sa/wp-content/uploads/2025/07/Saudi_Vision_2030_logo.svg-1024x685-1.png';
+
+export default function Vision2030Section() {
+  return <section className="bg-[#f5f7f6] px-4 py-14 sm:px-6 lg:px-8"><div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-8 rounded-2xl border border-[#dce7e1] bg-white px-6 py-8 shadow-sm md:flex-row md:px-10"><div><p className="mb-2 text-sm font-semibold uppercase tracking-wider text-primary">Mawjood & Saudi Vision 2030</p><h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Discover, connect and grow with Saudi Arabia&apos;s digital future</h2><p className="mt-3 max-w-2xl text-gray-600">Explore the official Saudi Vision 2030 website and learn more about the Kingdom&apos;s ambitious transformation.</p><a href={VISION_URL} target="_blank" rel="noopener noreferrer" className="mt-5 inline-flex rounded-lg bg-primary px-5 py-3 font-semibold text-white hover:bg-primary/90">Visit Saudi Vision 2030</a></div><a href={VISION_URL} target="_blank" rel="noopener noreferrer" aria-label="Visit Saudi Vision 2030" className="shrink-0 rounded-xl p-3 transition hover:bg-gray-50"><img src={VISION_LOGO} alt="Saudi Vision 2030" className="h-32 w-40 object-contain" /></a></div></section>;
+}

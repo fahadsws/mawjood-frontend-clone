@@ -40,6 +40,12 @@ export default function PricingPlansSection() {
     router.push(`/dashboard/subscriptions?plan=${planId}`);
   };
 
+  const formatInterval = (count: number = 1, interval: string = 'MONTH') => {
+    const labels: Record<string, string> = { DAY: 'day', WEEK: 'week', MONTH: 'month', YEAR: 'year', CUSTOM: 'day' };
+    const label = labels[interval] || interval.toLowerCase();
+    return `${count > 1 ? `${count} ` : ''}${label}${count > 1 ? 's' : ''}`;
+  };
+
   // Default plans if API doesn't return any
   const defaultPlans = [
     {
@@ -118,12 +124,24 @@ export default function PricingPlansSection() {
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {displayPlans.slice(0, 4).map((plan: any) => {
               const isRecommended = plan.isRecommended || plan.name?.toLowerCase().includes('growth');
-              const price = plan.price || plan.salePrice || 99;
-              const dailyPrice = typeof price === 'string' ? parseFloat(price) : price;
-              const originalPrice = plan.originalPrice || (dailyPrice * 1.3);
-              const discount = plan.discount || Math.round(((originalPrice - dailyPrice) / originalPrice) * 100);
+              const basePrice = Number(plan.price ?? 0);
+              const salePrice = plan.salePrice != null ? Number(plan.salePrice) : null;
+              const hasDiscount = salePrice !== null && salePrice > 0 && salePrice < basePrice;
+              const displayPrice = hasDiscount ? salePrice : basePrice || salePrice || 99;
+              const fallbackOriginalPrice = plan.originalPrice != null ? Number(plan.originalPrice) : null;
+              const originalPrice = hasDiscount
+                ? basePrice
+                : salePrice !== null && salePrice > basePrice
+                  ? salePrice
+                  : fallbackOriginalPrice && fallbackOriginalPrice > basePrice
+                    ? fallbackOriginalPrice
+                    : null;
+              const discount = originalPrice && originalPrice > displayPrice
+                ? Math.round(((originalPrice - displayPrice) / originalPrice) * 100)
+                : 0;
               const planName = plan.name || 'Standard Plan';
               const currency = plan.currency || 'SAR';
+              const interval = formatInterval(plan.intervalCount, plan.billingInterval || plan.interval);
               const featureEntries: [string, boolean][] = Array.isArray(plan.features)
                 ? plan.features.map((feature: PlanFeature) => [feature.name, feature.included])
                 : Object.entries(plan.features || {});
@@ -150,14 +168,14 @@ export default function PricingPlansSection() {
                     <h3 className="text-xl font-bold text-gray-900 mb-2">{planName}</h3>
                     <div className="flex items-baseline justify-center gap-2 mb-2">
                       <span className="text-3xl font-bold text-gray-900">
-                        {currency} {dailyPrice.toFixed(0)}
+                        {currency} {displayPrice.toFixed(0)}
                       </span>
-                      <span className="text-gray-500">/day</span>
+                      <span className="text-gray-500">/ {interval}</span>
                     </div>
                     {discount > 0 && (
                       <div className="flex items-center justify-center gap-2">
                         <span className="text-sm text-gray-400 line-through">
-                          {currency} {originalPrice.toFixed(0)}/day
+                          {currency} {originalPrice?.toFixed(0)}/{interval}
                         </span>
                         <span className="text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">
                           {discount}% Off

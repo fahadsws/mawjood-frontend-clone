@@ -63,7 +63,7 @@ export default function Navbar() {
           <div className="flex justify-between items-center h-full">
             {/* Left: Logo */}
             <div className="flex-shrink-0 flex items-center">
-            <Link href="/" className="flex items-center">
+            <div className="flex items-center">
                 <Image
                   src={logoSrc}
                   alt="Mawjood Logo"
@@ -76,7 +76,10 @@ export default function Navbar() {
                     {brandName}
                   </span>
                 </div>
-              </Link>
+                <Link href="https://www.vision2030.gov.sa/ar/" target="_blank" rel="noopener noreferrer" aria-label="Saudi Vision 2030" className="ml-3 hidden border-l border-gray-200 pl-3 sm:block">
+                  <img src="https://tweeq.edu.sa/wp-content/uploads/2025/07/Saudi_Vision_2030_logo.svg-1024x685-1.png" alt="Saudi Vision 2030" className="h-10 w-14 object-contain" />
+                </Link>
+              </div>
             </div>
 
             {/* Right: Desktop Actions */}
