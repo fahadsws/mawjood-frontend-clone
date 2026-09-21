@@ -156,5 +156,33 @@
     "noResults": "No results found",
     "viewAll": "View All",
     "readMore": "Read More"
+  },
+  "footerV2": {
+    "companyName": "Mawjood",
+    "tagline": "Connecting people to trusted local businesses across Saudi Arabia.",
+    "directoryLabel": "Saudi Arabia's Trusted Business Directory",
+    "bottomTagline": "Supporting Local Businesses, Building Stronger Communities.",
+    "contactUs": "Contact Us",
+    "careers": "Careers",
+    "terms": "Terms & Conditions",
+    "privacyPolicy": "Privacy Policy",
+    "addBusiness": "Add Your Business",
+    "advertise": "Advertise With Us",
+    "businessDashboard": "Business Dashboard",
+    "forBrands": "For Brands",
+    "resources": "Resources",
+    "blogs": "Blogs",
+    "popularCategories": "Popular Categories",
+    "supportTitle": "Support",
+    "country": "Kingdom of Saudi Arabia",
+    "copyrightText": "© {{year}} {{name}}. All rights reserved.",
+    "privacy": "Privacy",
+    "termsShort": "Terms",
+    "cookies": "Cookies",
+    "downloadAppTitle": "Download Mawjood App",
+    "downloadAppSubtitle": "Find trusted businesses on the go",
+    "downloadOnThe": "Download on the",
+    "getItOn": "GET IT ON",
+    "scanQr": "Scan to visit Mawjood"
   }
 }

@@ -13,6 +13,7 @@ import ServicesAndUtilities from '@/components/home/ServicesAndUtilities';
 import TrendingSearches from '@/components/home/TrendingSearches';
 import TouristPlacesSection from '@/components/home/TouristPlacesSection';
 import HeroStripAd from '@/components/home/HeroStripAd';
+import Vision2030Section from '@/components/home/Vision2030Section';
 
 export default function Home() {
     const { t, i18n } = useTranslation('common');
@@ -34,6 +35,7 @@ export default function Home() {
       <Blogs />
       <QuickLinks />
       <AppDownloadBanner />
+      <Vision2030Section />
     </div>
   );
 }
